@@ -1,23 +1,128 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cover Snap</title>
-<link rel="stylesheet" href="./style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vice Frame — GTA-Style Cover Art Maker</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='3' fill='%23ff5a7e'/></svg>">
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<main class="app">
-  <section class="controls">
-    <h1>Cover Snap</h1>
-    <p>A photo and a caption, made into a square cover.</p>
-    <label>Photo <input id="photo" type="file" accept="image/*"></label>
-    <label>Caption <input id="caption" type="text" maxlength="40" value="Sunset Heist"></label>
-    <button id="export" type="button">Export PNG 1080 x 1080</button>
-    <p id="status" role="status"></p>
-  </section>
-  <canvas id="cover" width="1080" height="1080" aria-label="The cover"></canvas>
-</main>
-<script type="module" src="./src/main.js"></script>
+  <div class="workspace">
+    <aside class="sidebar" aria-label="Cover Art Controls">
+      <header class="brand">
+        <div class="brand-badge">VF</div>
+        <div>
+          <h1>VICE FRAME</h1>
+          <p class="subtitle">Multi-panel poster &amp; cover maker</p>
+        </div>
+      </header>
+
+      <section class="panel-group">
+        <h2>1. Photos</h2>
+        <div id="drop-zone" class="drop-zone">
+          <input id="photo-input" type="file" accept="image/*" multiple hidden>
+          <button id="browse-btn" type="button" class="btn btn-accent">Add Your Photos</button>
+          <span class="hint">or drop images here (1 or more)</span>
+        </div>
+        <div id="photo-tray" class="photo-tray" aria-label="Loaded photos"></div>
+        <div class="row-actions">
+          <button id="fill-all-btn" type="button" class="btn btn-sm">Fill All Panels</button>
+          <button id="distribute-btn" type="button" class="btn btn-sm">Auto-Distribute</button>
+        </div>
+      </section>
+
+      <section class="panel-group">
+        <h2>2. Panel Layout &amp; Crop</h2>
+        <div id="layout-picker" class="chip-grid" role="group" aria-label="Panel layout">
+          <button type="button" class="chip active" data-layout="mosaic">4-Panel Mosaic</button>
+          <button type="button" class="chip" data-layout="triptych">Vice Triptych</button>
+          <button type="button" class="chip" data-layout="quad">Quad Split</button>
+          <button type="button" class="chip" data-layout="duo">Diagonal Duo</button>
+        </div>
+        <div class="panel-selector">
+          <span class="field-label">Active Panel:</span>
+          <div id="panel-tabs" class="panel-tabs" role="group" aria-label="Select panel"></div>
+        </div>
+        <div class="crop-controls">
+          <label class="range-field">
+            <span>Zoom <strong id="zoom-val">1.00x</strong></span>
+            <input id="panel-zoom" type="range" min="1" max="3" step="0.02" value="1">
+          </label>
+          <div class="row-actions">
+            <button id="zoom-out-btn" type="button" class="btn btn-sm" title="Zoom out">-</button>
+            <button id="zoom-in-btn" type="button" class="btn btn-sm" title="Zoom in">+</button>
+            <button id="reset-crop-btn" type="button" class="btn btn-sm">Reset Crop</button>
+          </div>
+          <p class="hint">Drag directly on any panel in the preview to pan.</p>
+        </div>
+      </section>
+
+      <section class="panel-group">
+        <h2>3. Colour Grade</h2>
+        <div id="grade-picker" class="chip-grid" role="group" aria-label="Colour grade">
+          <button type="button" class="chip active" data-grade="sunset">Sunset</button>
+          <button type="button" class="chip" data-grade="neon">Neon</button>
+          <button type="button" class="chip" data-grade="vicenight">Vice Night</button>
+          <button type="button" class="chip" data-grade="retrogold">Retro Gold</button>
+        </div>
+        <label class="range-field">
+          <span>Grade Intensity <strong id="intensity-val">85%</strong></span>
+          <input id="grade-intensity" type="range" min="0" max="100" step="1" value="85">
+        </label>
+      </section>
+
+      <section class="panel-group">
+        <h2>4. Caption Lettering</h2>
+        <label class="text-field">
+          <span>Main Title</span>
+          <input id="caption-input" type="text" maxlength="36" value="SUNSET HEIST" placeholder="SUNSET HEIST">
+        </label>
+        <label class="text-field">
+          <span>Subtitle Tag</span>
+          <input id="subcaption-input" type="text" maxlength="32" value="VICE COAST EDITION" placeholder="VICE COAST EDITION">
+        </label>
+        <div class="two-col">
+          <label class="range-field">
+            <span>Size <strong id="size-val">100%</strong></span>
+            <input id="caption-size" type="range" min="60" max="150" step="2" value="100">
+          </label>
+          <label class="select-field">
+            <span>Position</span>
+            <select id="caption-pos">
+              <option value="bottom" selected>Bottom</option>
+              <option value="top">Top</option>
+              <option value="center">Center</option>
+            </select>
+          </label>
+        </div>
+        <div id="caption-color-picker" class="swatch-row" role="group" aria-label="Caption colour">
+          <button type="button" class="swatch active" data-color="sunset" title="Sunset Gold"></button>
+          <button type="button" class="swatch" data-color="neon" title="Neon Pink"></button>
+          <button type="button" class="swatch" data-color="cyan" title="Electric Cyan"></button>
+          <button type="button" class="swatch" data-color="white" title="Crisp White"></button>
+        </div>
+      </section>
+
+      <section class="panel-group export-group">
+        <h2>5. Export Size</h2>
+        <div id="size-picker" class="size-grid" role="group" aria-label="Export dimensions">
+          <button type="button" class="chip active" data-size="1080x1080">1080 × 1080<small>Square</small></button>
+          <button type="button" class="chip" data-size="1080x1350">1080 × 1350<small>Portrait</small></button>
+          <button type="button" class="chip" data-size="1920x1080">1920 × 1080<small>Landscape</small></button>
+        </div>
+        <button id="export-btn" type="button" class="btn btn-primary">Export PNG</button>
+        <p id="status" class="status" role="status"></p>
+      </section>
+    </aside>
+
+    <main class="stage" aria-label="Live Cover Preview">
+      <div class="canvas-frame">
+        <canvas id="cover" width="1080" height="1080" aria-label="Cover art preview"></canvas>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
 </body>
 </html>
